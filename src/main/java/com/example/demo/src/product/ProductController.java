@@ -2,6 +2,7 @@ package com.example.demo.src.product;
 
 import com.example.demo.config.BaseException;
 import com.example.demo.config.BaseResponse;
+import com.example.demo.src.product.model.GetProductDetail;
 import com.example.demo.src.product.model.GetProductList;
 import com.example.demo.src.user.model.*;
 import com.example.demo.utils.JwtService;
@@ -34,46 +35,45 @@ public class ProductController {
     }
 
     /**
-     * 회원 조회 API
-     * [GET] /users
-     * 회원 번호 및 이메일 검색 조회 API
-     * [GET] /users? Email=
+     * 상품 조회 API
+     * [GET] /product
      * @return BaseResponse<List<GetProductList>>
      */
    //Query String
     @ResponseBody
     @GetMapping("") // (GET) 127.0.0.1:9000/users
-    public BaseResponse<List<GetProductList>> getProducts(@RequestParam(required = false) int productNo) {
+    public BaseResponse<List<GetProductList>> getProducts() {
         try{
-            if(productNo == 0){
+            //if(productNo == 0){
                 List<GetProductList> getProductList = productProvider.getProducts();
                 return new BaseResponse<>(getProductList);
-            }
+            //}
             // Get Users
-            List<GetProductList> getProductList = productProvider.getProductsByProductNo(productNo);
-            return new BaseResponse<>(getProductList);
+            //List<GetProductList> getProductList = productProvider.getProductsByProductNo(productNo);
+            //return new BaseResponse<>(getProductList);
         } catch(BaseException exception){
             return new BaseResponse<>(((exception.getStatus())));
         }
     }
 
     /**
-     * 회원 1명 조회 API
-     * [GET] /users/:userNo
-     * @return BaseResponse<GetUserRes>
+     * 상품 세부 조회 API
+     * [GET] /product/:productNo
+     * @return BaseResponse<GetProductList>
      */
     // Path-variable
-   /* @ResponseBody
-    @GetMapping("/{userNo}") // (GET) 127.0.0.1:9000/app/users/:userNo
-    public BaseResponse<GetUserRes> getUser(@PathVariable("userNo") int userNo) {
+    @ResponseBody
+    @GetMapping("/{productNo}") // (GET) 127.0.0.1:9000/products/:productNo
+    public BaseResponse<GetProductDetail> getProductDetail(@PathVariable("productNo") int productNo) {
         // Get Users
         try{
-            GetUserRes getUserRes = productProvider.getUser(userNo);
-            return new BaseResponse<>(getUserRes);
+            GetProductDetail getProductDetail = productProvider.getProductDetail(productNo);
+            return new BaseResponse<>(getProductDetail);
         } catch(BaseException exception){
             return new BaseResponse<>((exception.getStatus()));
         }
 
     }
-*/
+
+
 }

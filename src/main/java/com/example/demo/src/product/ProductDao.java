@@ -1,6 +1,7 @@
 package com.example.demo.src.product;
 
 
+import com.example.demo.src.product.model.GetProductDetail;
 import com.example.demo.src.product.model.GetProductList;
 import com.example.demo.src.user.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,7 +81,7 @@ public class ProductDao {
                 );
     }
 
-    public List<GetProductList> getProductNosByProductNo(int productNo){
+/*    public List<GetProductList> getProductNosByProductNo(int productNo){
         String getProductsByProductNoQuery = "select " +
                 "Product.productNo," +
                 "User.userNo,User.userNickName," +
@@ -138,59 +139,75 @@ public class ProductDao {
                         rs.getInt("productViewNum"),
                         rs.getInt("chatNum")),
                 getProductByProductNoParams);
-    }
-/*
-    public GetUserRes getUser(int userNo){
-        String getUserQuery = "select userNo,userImageUrl,userNickname,userCode,userManner,userRedealRate,userResponseRate, " +
-        "date_format(User.createdAt,'%Y년 %m월 %d일 가입') as createdAt, "+
-        "case when (year(User.updatedAt) = year(now()) and dayofyear(now())- dayofyear(User.updatedAt) <= 3) then '최근 3일 이내 활동' " +
-        "when (year(now()) - year(User.updatedAt) = 1) then '최근 1년 이내 활동' " +
-        "when (year(now()) - year(User.updatedAt) <= 5) then '최근 5년 이내 활동' " +
-        "end as updatedAt, User.status, "+
-        "case " +
-            "when (userRegionNo = '1') then '가좌동' " +
-            "when (userRegionNo = '2') then '가호동' " +
-            "when (userRegionNo = '3') then '호탄동' " +
-            "when (userRegionNo = '4') then null " +
-            "when (userRegionNo = '10') then '신사동' " +
-            "end as userRegionNo " +
-            ", userRegionCertificationNum, " +
-        "case " +
-            "when (User.userSubRegionNo = '1') then '가좌동' " +
-            "when (User.userSubRegionNo = '2') then '가호동' " +
-            "when (User.userSubRegionNo = '3') then '호탄동' " +
-            "when (User.userSubRegionNo = '4') then null " +
-            "when (User.userSubRegionNo = '10') then '신사동' " +
-            "end as userSubRegionNo " +
-            ", userSubRegionCertificationNum, " +
-        "case " +
-            "when (year(UserMainRegion.updatedAt) = year(now()) and dayofyear(now())- dayofyear(UserMainRegion.updatedAt) <= 30 and userRegionCertificationNum >= 1) then '최근 30일' " +
-            "when (year(now()) - year(UserMainRegion.updatedAt) = 1) then '최근 1년 이내' " +
-            "else '미인증' end as UserMainRegionUpdatedDate " +
-        "from User "+
-        "join UserMainRegion on User.userRegionNo = UserMainRegion.userMainRegionNo " +
-        "join UserSubRegion on UserMainRegion.userSubRegionNo = UserSubRegion.userSubRegionNo " +
-        "where User.userNo = ?";
-        int getUserParams = userNo;
-        return this.jdbcTemplate.queryForObject(getUserQuery,
-                (rs, rowNum) -> new GetUserRes(
+    }*/
+
+    public GetProductDetail getProductDetail(int productNo){
+        String getProductDetail = "select " +
+                "Product.productNo, " +
+                "case " +
+                "when (Product.productNo = ProductImageUrl.productNo) then productImageUrl end as productImage, " +
+                "User.userNo, userImageUrl, userNickname, " +
+                "case " +
+                "when (userRegionNo = 1) then '가좌동' " +
+                "when (userRegionNo = 2) then '가호동' " +
+                "when (userRegionNo = 3) then '호탄동' " +
+                "when (userRegionNo = 10) then '신사동' " +
+                "when (userRegionNo = 4) then 'null' " +
+                "end as userMainRegion, " +
+                "userManner, productTitle, " +
+                "case " +
+                "when (productCategory = 1) then '기타 중고물품' " +
+                "end as productCategory, " +
+                "case " +
+                "when (year(now()) = year(Product.createdAt) and dayofyear(now()) - dayofyear(Product.createdAt) < 1 and hour(now()) - hour(Product.createdAt) < 1 and " +
+                "minute(now()) - minute(Product.createdAt) < 1) then concat(second(now()) - second(Product.createdAt), '초 전') " +
+                "when (year(now()) = year(Product.createdAt) and dayofyear(now()) - dayofyear(Product.createdAt) < 1 and hour(now()) - hour(Product.createdAt) < 1 and " +
+                "minute(now()) - minute(Product.createdAt) >= 1) then concat(minute(now()) - minute(Product.createdAt), '분 전') " +
+                "when (year(now()) = year(Product.createdAt) and dayofyear(now()) - dayofyear(Product.createdAt) < 1 and hour(now()) - hour(Product.createdAt) >= 1 " +
+                ") then concat(hour(now()) - hour(Product.createdAt), '시간 전') " +
+                "when (year(now()) = year(Product.createdAt) and dayofyear(now()) - dayofyear(Product.createdAt) >= 1 and dayofyear(now()) - dayofyear(Product.createdAt) < 31 " +
+                ") then concat(dayofyear(now()) - dayofyear(Product.createdAt), '일 전') " +
+                "when (year(now()) = year(Product.createdAt) and dayofyear(now()) - dayofyear(Product.createdAt) >= 31 " +
+                ") then concat(month(now()) - month(Product.createdAt), '개월 전') end as updatedAt, " +
+                "productContent, " +
+                "case when (UserProductInterest.productNo = Product.productNo and UserProductInterest.productInterest = 'Y') then count(distinct User.userNo) end as productInterestNum, " +
+                "productViewNum, " +
+                "count(distinct case when Room.productNo = Product.productNo then 1 end) as chatNum, Product.productStatus, " +
+                "case " +
+                "when (Product.productStatus = 'sell' and productPrice = null) then 0 " +
+                "when (Product.productStatus = 'reserve' and productPrice = null) then 0 " +
+                "when (Product.productStatus = 'sole_out'and productPrice = null) then 0 " +
+                "when (Product.productStatus = 'sell' or Product.productStatus = 'reserve' or Product.productStatus = 'sold_out') then format(productPrice,0) " +
+                "when (Product.productStatus = 'share' or Product.productStatus = 'shareReserve' or Product.productStatus = 'share_sold_out') then null " +
+                "end as productPrice, productPriceStatus " +
+                "from Product " +
+                "join User on Product.userNo = User.userNo " +
+                "join UserProductInterest " +
+                "join Room " +
+                "join ProductImageUrl " +
+                "where Product.productNo = ? ";
+        int getProductDetailParams = productNo;
+        return this.jdbcTemplate.queryForObject(getProductDetail,
+                (rs, rowNum) -> new GetProductDetail(
+                        rs.getInt("productNo"),
+                        rs.getString("productImage"),
                         rs.getInt("userNo"),
                         rs.getString("userImageUrl"),
                         rs.getString("userNickname"),
-                        rs.getInt("userCode"),
+                        rs.getString("userMainRegion"),
                         rs.getFloat("userManner"),
-                        rs.getString("userRedealRate"),
-                        rs.getString("userResponseRate"),
-                        rs.getString("createdAt"),
+                        rs.getString("productTitle"),
+                        rs.getString("productCategory"),
                         rs.getString("updatedAt"),
-                        rs.getString("status"),
-                        rs.getString("userRegionNo"),
-                        rs.getInt("userRegionCertificationNum"),
-                        rs.getString("userSubRegionNo"),
-                        rs.getInt("userSubRegionCertificationNum"),
-                        rs.getString("UserMainRegionUpdatedDate"))
+                        rs.getString("productContent"),
+                        rs.getInt("productInterestNum"),
+                        rs.getInt("productViewNum"),
+                        rs.getInt("chatNum"),
+                        rs.getString("productStatus"),
+                        rs.getString("productPrice"),
+                        rs.getString("productPriceStatus"))
                         ,
-                getUserParams);
-    }*/
+                getProductDetailParams);
+    }
 
 }

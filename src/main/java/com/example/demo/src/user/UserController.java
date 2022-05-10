@@ -81,18 +81,19 @@ public class UserController {
 
     /**
      * 마이 당근 회원 1명 조회 API
-     * [GET] /users/:userNo
-     * @return BaseResponse<GetUserRes>
+     * [GET] /badge/:userNo
+     * @return BaseResponse<GetBadge>
      */
     // Path-variable
     @ResponseBody
-    @GetMapping("/myCarrot/{userNo}") // (GET) 127.0.0.1:9000/users/myCarrot/:userNo
-    public BaseResponse<GetMyCarrot> getMyCarrot(@PathVariable("userNo") int userNo) {
+    @GetMapping("/badge/{userNo}") // (GET) 127.0.0.1:9000/users/badge/:userNo
+    public BaseResponse<List<GetBadge>> getBadge(@PathVariable("userNo") int userNo) {
         // Get Users
         try{
-            GetMyCarrot getMyCarrot = userProvider.getMyCarrot(userNo);
-            return new BaseResponse<>(getMyCarrot);
+            List<GetBadge> getBadge = userProvider.getBadge(userNo);
+            return new BaseResponse<>(getBadge);
         } catch(BaseException exception){
+            System.out.println(exception);
             return new BaseResponse<>((exception.getStatus()));
         }
 
@@ -174,5 +175,47 @@ public class UserController {
         }
     }
 
+    /**
+     * 유저 관심 카테고리 조회 API
+     * [GET] /users/interestCategory/:userNo
+     * @return BaseResponse<GetInterestCategory>
+     */
+    @ResponseBody
+    @GetMapping("/interestCategory/{userNo}") // (GET) 127.0.0.1:9000/users/interestCategory/:userNo
+    public BaseResponse<List<GetInterestCategory>> getInterestCategory(@PathVariable("userNo") int userNo) {
+        // Get Users
+        try{
+            List<GetInterestCategory> getInterestCategory = userProvider.getInterestCategory(userNo);
+            return new BaseResponse<>(getInterestCategory);
+        } catch(BaseException exception){
+            return new BaseResponse<>((exception.getStatus()));
+        }
+    }
 
+    /**
+     * 유저 관심카테고리 설정 API
+     * [PATCH] /users/interestCategory/:userNo
+     * @return BaseResponse<String>
+     */
+    @ResponseBody
+    @PatchMapping("/interestCategory/{userNo}")
+    public BaseResponse<String> modifyInterestCategory(@PathVariable("userNo") int userNo, @RequestBody InterestCategory interestCategory){
+        try {
+            //jwt에서 idx 추출.
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
+            //같다면 유저네임 변경
+            PatchInterestCategoryReq patchInterestCategoryReq = new PatchInterestCategoryReq(userNo,interestCategory.getInterestCategoryNo(), interestCategory.getIsCheck());
+            userService.modifyInterestCategory(patchInterestCategoryReq);
+
+            String result = "";
+            return new BaseResponse<>(result);
+        } catch (BaseException exception) {
+            System.out.println(exception);
+            return new BaseResponse<>((exception.getStatus()));
+        }
+    }
 }

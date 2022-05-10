@@ -2,6 +2,7 @@ package com.example.demo.src.product;
 
 
 import com.example.demo.config.BaseException;
+import com.example.demo.src.product.model.GetProductDetail;
 import com.example.demo.src.product.model.GetProductList;
 import com.example.demo.src.user.model.*;
 import com.example.demo.utils.JwtService;
@@ -40,7 +41,7 @@ public class ProductProvider {
         }
     }
 
-    public List<GetProductList> getProductsByProductNo(int productNo) throws BaseException{
+  /*  public List<GetProductList> getProductsByProductNo(int productNo) throws BaseException{
         try{
             List<GetProductList> getProductList = productDao.getProductNosByProductNo(productNo);
             return getProductList;
@@ -48,15 +49,16 @@ public class ProductProvider {
         catch (Exception exception) {
             throw new BaseException(DATABASE_ERROR);
         }
-    }
+    }*/
 
-/*
-    public GetUserRes getUser(int userNo) throws BaseException {
+
+    public GetProductDetail getProductDetail(int productNo) throws BaseException {
         try {
-            GetUserRes getUserRes = productDao.getUser(userNo);
-            return getUserRes;
+            GetProductDetail getProductDetail = productDao.getProductDetail(productNo);
+            return getProductDetail;
         } catch (Exception exception) {
+            System.out.println(exception);
             throw new BaseException(DATABASE_ERROR);
         }
-    }*/
+    }
 }

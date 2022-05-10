@@ -24,14 +24,14 @@ public class JwtService {
     @param userIdx
     @return String
      */
-    public String createJwt(int userIdx){
+    public String createJwt(int userIdx){ //
         Date now = new Date();
         return Jwts.builder()
                 .setHeaderParam("type","jwt")
                 .claim("userIdx",userIdx)
                 .setIssuedAt(now)
-                .setExpiration(new Date(System.currentTimeMillis()+1*(1000*60*60*24*365)))
-                .signWith(SignatureAlgorithm.HS256, Secret.JWT_SECRET_KEY)
+                .setExpiration(new Date(System.currentTimeMillis()+1*(1000*60*60*24*365))) //만료기간
+                .signWith(SignatureAlgorithm.HS256, Secret.JWT_SECRET_KEY) //사용하는 알고리즘
                 .compact();
     }
 

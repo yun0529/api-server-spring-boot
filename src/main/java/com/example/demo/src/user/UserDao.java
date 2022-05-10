@@ -118,19 +118,19 @@ public class UserDao {
                 getUserParams);
     }
 
-    public GetMyCarrot getMyCarrotByUserNo(int userNo){
+    public List<GetBadge> getBadgeByUserNo(int userNo){
         String getGetMyCarrotByUserNoQuery = "select " +
-                "userNo,userImageUrl,userNickname,userCode " +
-                "from User " +
-                "where userNo = ?";
-        int getMyCarrotByUserNoParams = userNo;
-        return this.jdbcTemplate.queryForObject(getGetMyCarrotByUserNoQuery,
-                (rs, rowNum) -> new GetMyCarrot(
+                "User.userNo, badgeName " +
+                "from UserActivityBadge " +
+                "join User on UserActivityBadge.userNo = User.userNo and userActivityBadgeNo != 0 " +
+                "join BadgeName on UserActivityBadgeNo = badgeNameNo " +
+                "where User.userNo = ? ";
+        int getBadgeByUserNoParams = userNo;
+        return this.jdbcTemplate.query(getGetMyCarrotByUserNoQuery,
+                (rs, rowNum) -> new GetBadge(
                         rs.getInt("userNo"),
-                        rs.getString("userImageUrl"),
-                        rs.getString("userNickname"),
-                        rs.getInt("userCode")),
-                getMyCarrotByUserNoParams);
+                        rs.getString("badgeName")),
+                        getBadgeByUserNoParams);
     }
 
     public int createUser(PostUserReq postUserReq){
@@ -186,6 +186,49 @@ public class UserDao {
         Object[] modifyUserNameParams = new Object[]{"Active", postLoginReq.getUserId()};
 
         return this.jdbcTemplate.update(modifyUserNameQuery,modifyUserNameParams);
+    }
+
+    public List<GetInterestCategory> getInterestCategory(int userNo){
+        String getGetMyCarrotByUserNoQuery = "select " +
+                "userNo, " +
+                "case " +
+                "when (userInterestCategoryNo = 1) then '디지털기기' " +
+                "when (userInterestCategoryNo = 2) then '생활가전' " +
+                "when (userInterestCategoryNo = 3) then '가구/인테리어' " +
+                "when (userInterestCategoryNo = 4) then '유아동' " +
+                "when (userInterestCategoryNo = 5) then '생활/가공식품' " +
+                "when (userInterestCategoryNo = 6) then '유아도서' " +
+                "when (userInterestCategoryNo = 7) then '스포츠/레저' " +
+                "when (userInterestCategoryNo = 8) then '여성잡화' " +
+                "when (userInterestCategoryNo = 9) then '여성의류' " +
+                "when (userInterestCategoryNo = 10) then '남성패션/잡화' " +
+                "when (userInterestCategoryNo = 11) then '게임/취미' " +
+                "when (userInterestCategoryNo = 12) then '뷰티/미용' " +
+                "when (userInterestCategoryNo = 13) then '반려동물용품' " +
+                "when (userInterestCategoryNo = 14) then '도서/티켓/음반' " +
+                "when (userInterestCategoryNo = 15) then '식물' " +
+                "when (userInterestCategoryNo = 16) then '기타 중고물품' " +
+                "when (userInterestCategoryNo = 17) then '삽니다' " +
+                "end as userInterestCategory, isCheck " +
+                "from UserInterestCategory " +
+                "where userNo = ?";
+        int getInterestCategoryByUserNoParams = userNo;
+        return this.jdbcTemplate.query(getGetMyCarrotByUserNoQuery,
+                (rs, rowNum) -> new GetInterestCategory(
+                        rs.getInt("userNo"),
+                        rs.getString("userInterestCategory"),
+                        rs.getString("isCheck")),
+                getInterestCategoryByUserNoParams);
+    }
+
+    public int modifyInterestCategory(PatchInterestCategoryReq patchInterestCategoryReq){
+        String modifyInterestCategoryQuery = "update UserInterestCategory set isCheck = ? where userNo = ? and userInterestCategoryNo = ?";
+        Object[] modifyUserNameParams = new Object[]{
+                patchInterestCategoryReq.getIsCheck(),
+                patchInterestCategoryReq.getUserNo(),
+                patchInterestCategoryReq.getInterestCategoryNo()};
+
+        return this.jdbcTemplate.update(modifyInterestCategoryQuery,modifyUserNameParams);
     }
 
 }

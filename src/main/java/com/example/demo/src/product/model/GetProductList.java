@@ -20,7 +20,4 @@ public class GetProductList {
     private int productViewNum;
     private int chatNum;
 
-    public GetProductList(int productNo) {
-        this.productNo = productNo;
-    }
 }

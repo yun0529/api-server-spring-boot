@@ -2,7 +2,6 @@ package com.example.demo.src.user;
 
 
 import com.example.demo.config.BaseException;
-import com.example.demo.config.BaseResponseStatus;
 import com.example.demo.src.user.model.*;
 import com.example.demo.utils.JwtService;
 import com.example.demo.utils.SHA256;
@@ -59,11 +58,12 @@ public class UserProvider {
             throw new BaseException(DATABASE_ERROR);
         }
     }
-    public GetMyCarrot getMyCarrot(int userNo) throws BaseException {
+    public List<GetBadge> getBadge(int userNo) throws BaseException {
         try {
-            GetMyCarrot getMyCarrot = userDao.getMyCarrotByUserNo(userNo);
-            return getMyCarrot;
+            List<GetBadge> getBadge = userDao.getBadgeByUserNo(userNo);
+            return getBadge;
         } catch (Exception exception) {
+            System.out.println(exception);
             throw new BaseException(DATABASE_ERROR);
         }
     }
@@ -99,6 +99,16 @@ public class UserProvider {
         else{
             throw new BaseException(FAILED_TO_LOGIN);
         }
+    }
 
+    public List<GetInterestCategory> getInterestCategory(int userNo) throws BaseException {
+        try {
+            List<GetInterestCategory> getInterestCategory = userDao.getInterestCategory(userNo);
+            return getInterestCategory;
+        } catch (Exception exception) {
+            System.out.println(exception);
+            exception.printStackTrace();
+            throw new BaseException(DATABASE_ERROR);
+        }
     }
 }
