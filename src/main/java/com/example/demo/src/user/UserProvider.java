@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Random;
 
 import static com.example.demo.config.BaseResponseStatus.*;
 
@@ -100,7 +101,34 @@ public class UserProvider {
             throw new BaseException(FAILED_TO_LOGIN);
         }
     }
-
+    public PostCertificationUserRes certificationUser(PostCertificationUserReq postCertificationUserReq) throws BaseException {
+        System.out.println("첫 if 문 전까진 실행된다");
+        User user = userDao.getId(postCertificationUserReq);
+        String userCertId = postCertificationUserReq.getUserId();
+        System.out.println("userCertId : " + postCertificationUserReq.getUserId());
+        System.out.println("userId : " + user.getUserId());
+        if(user.getUserId().equals(userCertId)){
+            System.out.println("첫 if 문 실행된다");
+            if(user.getStatus().equals("Active")){
+                throw new BaseException(FAILED_TO_LOGIN_STATUS);
+            }
+            else{
+                int userNo = user.getUserNo();
+                Random rand  = new Random();
+                String randomSum= "";
+                for(int i=0; i<4; i++) {
+                    String ran = Integer.toString(rand.nextInt(10));
+                    randomSum+=ran;
+                }
+                int userCode = Integer.parseInt(randomSum);
+                System.out.println("여기까진 들어왓따.");
+                return new PostCertificationUserRes(userNo,userCode);
+            }
+        }
+        else{
+            throw new BaseException(FAILED_TO_LOGIN);
+        }
+    }
     public List<GetInterestCategory> getInterestCategory(int userNo) throws BaseException {
         try {
             List<GetInterestCategory> getInterestCategory = userDao.getInterestCategory(userNo);

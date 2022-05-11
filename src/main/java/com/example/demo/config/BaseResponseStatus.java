@@ -32,7 +32,13 @@ public enum BaseResponseStatus {
 
     POST_USERS_INVALID_NUMBER_COUNT(false,2018,"전화번호 자릿수를 확인해주세요."),
 
+    // [PATCH] /users/certification
+    POST_USERS_INVALID_EMPTY_USERNO(false,2019,"유저 번호를 입력해주세요."),
 
+    // [POST] /products
+    POST_PRODUCTS_EMPTY_TITLE(false,2020,"상품 타이틀을 입력해주세요."),
+
+    POST_PRODUCTS_EMPTY_CONTENT(false,2021,"상품 내용을 입력해주세요."),
 
     /**
      * 3000 : Response 오류
@@ -58,6 +64,8 @@ public enum BaseResponseStatus {
     PASSWORD_ENCRYPTION_ERROR(false, 4011, "비밀번호 암호화에 실패하였습니다."),
     PASSWORD_DECRYPTION_ERROR(false, 4012, "비밀번호 복호화에 실패하였습니다."),
 
+    //[POST] /products/interest/{productNo}
+    MODIFY_FAIL_INTEREST(false,4014,"관심 설정 실패"),
 
     // 5000 : 필요시 만들어서 쓰세요
     //PATCH

@@ -157,6 +157,20 @@ public class UserDao {
                 checkUserIdParams);
     }
 
+    /*public int certificationUser(PostCertificationUserReq postCertificationUserReq){
+        String certificationUserQuery = "select userNo from User where userId = ? ";
+        String getUserIdParams = postCertificationUserReq.getUserId();
+        return this.jdbcTemplate.queryForObject(certificationUserQuery,
+                (rs,rowNum)-> new User(
+                        rs.getInt("userNo"),
+                        rs.getString("userId"),
+                        rs.getString("userPw"),
+                        rs.getString("userNickname"),
+                        rs.getString("status")
+                ),
+                getUserIdParams
+        );
+    }*/
 
     public int modifyUserName(PatchUserReq patchUserReq){
         String modifyUserNameQuery = "update User set userNickname = ? where userNo = ? ";
@@ -181,8 +195,30 @@ public class UserDao {
                 );
 
     }
+    public User getId(PostCertificationUserReq postCertificationUserReq){
+        String getIdQuery = "select userNo, userId, userPw, userNickname, status from User where userId = ? ";
+        System.out.println(postCertificationUserReq.getUserId());
+        String getIdParams = postCertificationUserReq.getUserId();
+        System.out.println("다오도 실행된다");
+        return this.jdbcTemplate.queryForObject(getIdQuery,
+                (rs,rowNum)-> new User(
+                        rs.getInt("userNo"),
+                        rs.getString("userId"),
+                        rs.getString("userPw"),
+                        rs.getString("userNickname"),
+                        rs.getString("status")
+                ),
+                getIdParams);
+    }
     public int modifyUserStatusLogIn(PostLoginReq postLoginReq){
         String modifyUserNameQuery = "update User set status = ? where userId = ? ";
+        Random rand  = new Random();
+        String randomSum= "";
+        for(int i=0; i<4; i++) {
+            String ran = Integer.toString(rand.nextInt(10));
+            randomSum+=ran;
+        }
+        int userCode = Integer.parseInt(randomSum);
         Object[] modifyUserNameParams = new Object[]{"Active", postLoginReq.getUserId()};
 
         return this.jdbcTemplate.update(modifyUserNameQuery,modifyUserNameParams);

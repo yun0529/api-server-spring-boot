@@ -7,6 +7,7 @@ import com.example.demo.config.BaseResponse;
 import com.example.demo.src.user.model.*;
 import com.example.demo.utils.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -127,6 +128,21 @@ public class UserController {
             return new BaseResponse<>((exception.getStatus()));
         }
     }
+    /**
+     * 로그인 인증 API
+     * [Post] /users/certification
+     * @return BaseResponse<PostCertificationUserRes>
+     */
+    @ResponseBody
+    @PatchMapping("/certification")
+    public BaseResponse<PostCertificationUserRes> postCertificationUser(@RequestBody PostCertificationUserReq postCertificationUserReq){
+        try{
+            PostCertificationUserRes postCertificationUserRes = userProvider.certificationUser(postCertificationUserReq);
+            return new BaseResponse<>(postCertificationUserRes);
+        } catch (BaseException exception){
+            return new BaseResponse<>(exception.getStatus());
+        }
+    }
 
     /**
      * 로그인 API
@@ -218,4 +234,5 @@ public class UserController {
             return new BaseResponse<>((exception.getStatus()));
         }
     }
+
 }
