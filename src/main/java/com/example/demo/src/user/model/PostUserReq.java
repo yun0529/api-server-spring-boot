@@ -9,8 +9,6 @@ import lombok.Setter;
 @AllArgsConstructor
 public class PostUserReq {
     private String userId;
-    private String userPw;
     private int userRegionNo;
-    private int userCode;
     private String userNickname;
 }

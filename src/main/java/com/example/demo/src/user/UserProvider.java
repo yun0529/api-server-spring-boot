@@ -9,11 +9,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Random;
 
 import static com.example.demo.config.BaseResponseStatus.*;
+import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
 
 //Provider : Read의 비즈니스 로직 처리
 @Service
@@ -42,6 +45,10 @@ public class UserProvider {
     }
 
     public List<GetUserRes> getUsersByUserNo(int userNo) throws BaseException{
+        GetUserRes users = userDao.getUser(userNo);
+        if(users.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try{
             List<GetUserRes> getUsersRes = userDao.getUsersByUserNo(userNo);
             return getUsersRes;
@@ -52,6 +59,10 @@ public class UserProvider {
     }
 
     public GetUserRes getUser(int userNo) throws BaseException {
+        GetUserRes users = userDao.getUser(userNo);
+        if(users.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try {
             GetUserRes getUserRes = userDao.getUser(userNo);
             return getUserRes;
@@ -60,6 +71,10 @@ public class UserProvider {
         }
     }
     public List<GetBadge> getBadge(int userNo) throws BaseException {
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try {
             List<GetBadge> getBadge = userDao.getBadgeByUserNo(userNo);
             return getBadge;
@@ -76,15 +91,15 @@ public class UserProvider {
             throw new BaseException(DATABASE_ERROR);
         }
     }
-
+    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = READ_COMMITTED, rollbackFor = Exception.class)
     public PostLoginRes logIn(PostLoginReq postLoginReq) throws BaseException{
         User user = userDao.getPwd(postLoginReq);
-        String encryptPwd;
-        try {
+        String encryptPwd = postLoginReq.getUserPw();
+        /*try {
             encryptPwd=new SHA256().encrypt(postLoginReq.getUserPw());
         } catch (Exception ignored) {
             throw new BaseException(PASSWORD_DECRYPTION_ERROR);
-        }
+        }*/
 
         if(user.getUserPw().equals(encryptPwd)){
             if(user.getStatus().equals("Active")){
@@ -101,14 +116,11 @@ public class UserProvider {
             throw new BaseException(FAILED_TO_LOGIN);
         }
     }
+    @Transactional(propagation = Propagation.REQUIRES_NEW, isolation = READ_COMMITTED, rollbackFor = Exception.class)
     public PostCertificationUserRes certificationUser(PostCertificationUserReq postCertificationUserReq) throws BaseException {
-        System.out.println("첫 if 문 전까진 실행된다");
         User user = userDao.getId(postCertificationUserReq);
         String userCertId = postCertificationUserReq.getUserId();
-        System.out.println("userCertId : " + postCertificationUserReq.getUserId());
-        System.out.println("userId : " + user.getUserId());
         if(user.getUserId().equals(userCertId)){
-            System.out.println("첫 if 문 실행된다");
             if(user.getStatus().equals("Active")){
                 throw new BaseException(FAILED_TO_LOGIN_STATUS);
             }
@@ -121,7 +133,8 @@ public class UserProvider {
                     randomSum+=ran;
                 }
                 int userCode = Integer.parseInt(randomSum);
-                System.out.println("여기까진 들어왓따.");
+                System.out.println(userCode);
+                userDao.setPw(user.getUserId(), String.valueOf(userCode));
                 return new PostCertificationUserRes(userNo,userCode);
             }
         }
@@ -130,6 +143,10 @@ public class UserProvider {
         }
     }
     public List<GetInterestCategory> getInterestCategory(int userNo) throws BaseException {
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try {
             List<GetInterestCategory> getInterestCategory = userDao.getInterestCategory(userNo);
             return getInterestCategory;
@@ -137,6 +154,12 @@ public class UserProvider {
             System.out.println(exception);
             exception.printStackTrace();
             throw new BaseException(DATABASE_ERROR);
+        }
+    }
+    public void getAutoLogin(int userNo) throws BaseException{
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
         }
     }
 }

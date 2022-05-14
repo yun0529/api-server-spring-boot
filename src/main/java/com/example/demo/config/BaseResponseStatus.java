@@ -40,6 +40,13 @@ public enum BaseResponseStatus {
 
     POST_PRODUCTS_EMPTY_CONTENT(false,2021,"상품 내용을 입력해주세요."),
 
+    // [PATCH] /users/interestCategory/{userNo}
+    POST_INVALID_USERS_INTEREST_CATEGORY_INPUT(false,2022,"관심 상품의 체크 여부를 확인해주세요."),
+    // [PATCH] /products/productStatus/:userNo
+    PATCH_INVALID_USERS_SALE_STATUS_INPUT(false,2023,"판매 상태 입력 여부를 확인해주세요."),
+
+    // [POST] /products/interest
+    POST_INVALID_PRODUCT_INTEREST_INPUT(false,2024,"관심 상태 입력 형식이 틀렸습니다."),
     /**
      * 3000 : Response 오류
      */
@@ -51,6 +58,8 @@ public enum BaseResponseStatus {
     FAILED_TO_LOGIN(false,3014,"없는 아이디거나 비밀번호가 틀렸습니다."),
 
     FAILED_TO_LOGIN_STATUS(false,3015,"이미 로그인된 아이디입니다."),
+
+    DO_LOGIN(false,3016,"로그아웃된 상태입니다."),
 
     /**
      * 4000 : Database, Server 오류

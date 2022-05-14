@@ -5,8 +5,10 @@ import com.example.demo.src.user.model.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
 
 import javax.sql.DataSource;
+import javax.transaction.Transactional;
 import java.util.List;
 import java.util.Random;
 
@@ -19,6 +21,7 @@ public class UserDao {
     public void setDataSource(DataSource dataSource){
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
+
 
     public List<GetUserRes> getUsers(){
         String getUsersQuery = "select * from User";
@@ -142,7 +145,7 @@ public class UserDao {
             randomSum+=ran;
         }
         int userCode = Integer.parseInt(randomSum);
-        Object[] createUserParams = new Object[]{postUserReq.getUserId(), postUserReq.getUserPw(), postUserReq.getUserRegionNo(),userCode,"당근 유저"};
+        Object[] createUserParams = new Object[]{postUserReq.getUserId(), userCode, postUserReq.getUserRegionNo(),userCode,"당근 유저"};
         this.jdbcTemplate.update(createUserQuery, createUserParams);
 
         String lastInsertIdQuery = "select last_insert_id()";
@@ -199,7 +202,6 @@ public class UserDao {
         String getIdQuery = "select userNo, userId, userPw, userNickname, status from User where userId = ? ";
         System.out.println(postCertificationUserReq.getUserId());
         String getIdParams = postCertificationUserReq.getUserId();
-        System.out.println("다오도 실행된다");
         return this.jdbcTemplate.queryForObject(getIdQuery,
                 (rs,rowNum)-> new User(
                         rs.getInt("userNo"),
@@ -209,6 +211,25 @@ public class UserDao {
                         rs.getString("status")
                 ),
                 getIdParams);
+    }
+    public User getNo(int userNo){
+        String getIdQuery = "select userNo, userId, userPw, userNickname, status from User where userNo = ? ";
+        int getNoParams = userNo;
+        return this.jdbcTemplate.queryForObject(getIdQuery,
+                (rs,rowNum)-> new User(
+                        rs.getInt("userNo"),
+                        rs.getString("userId"),
+                        rs.getString("userPw"),
+                        rs.getString("userNickname"),
+                        rs.getString("status")
+                ),
+                getNoParams);
+    }
+    public int setPw(String userId,String pw){
+        String serUserPwNameQuery = "update User set userPw = ? where userId = ? ";
+        Object[] serUserPwParams = new Object[]{pw, userId};
+        System.out.println(pw);
+        return this.jdbcTemplate.update(serUserPwNameQuery,serUserPwParams);
     }
     public int modifyUserStatusLogIn(PostLoginReq postLoginReq){
         String modifyUserNameQuery = "update User set status = ? where userId = ? ";

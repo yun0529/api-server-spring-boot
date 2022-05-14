@@ -11,9 +11,14 @@ import com.example.demo.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.example.demo.config.BaseResponseStatus.INVALID_USER_JWT;
+import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
 
 @RestController
 @RequestMapping("/chats")
@@ -43,6 +48,11 @@ public class ChatController {
     @GetMapping("/room/{userNo}") // (GET) 127.0.0.1:9000/chats/room/:userNo
     public BaseResponse<List<GetChatRoom>> getChatRoom(@PathVariable("userNo") int userNo) {
         try{
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             List<GetChatRoom> getChatRoom = chatProvider.getChatRoom(userNo);
                 return new BaseResponse<>(getChatRoom);
         } catch(BaseException exception){
@@ -52,15 +62,20 @@ public class ChatController {
 
     /**
      * 채팅방 내용 조회 API
-     * [GET] /chats/{roomNo}
+     * [GET] /chats/{roomNo}/{userNo}
      * @return BaseResponse<List<GetChatContent>>
      */
     //Query String
     @ResponseBody
-    @GetMapping("/{roomNo}") // (GET) 127.0.0.1:9000/chats/{roomNo}
-    public BaseResponse<List<GetChatContent>> getChatContent(@PathVariable("roomNo") int roomNo) {
+    @GetMapping("/{roomNo}/{userNo}") // (GET) 127.0.0.1:9000/chats/{roomNo}
+    public BaseResponse<List<GetChatContent>> getChatContent(@PathVariable("roomNo") int roomNo, @PathVariable("userNo") int userNo) {
         try{
-            List<GetChatContent> getChatContent = chatProvider.getChatContent(roomNo);
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
+            List<GetChatContent> getChatContent = chatProvider.getChatContent(roomNo, userNo);
             return new BaseResponse<>(getChatContent);
         } catch(BaseException exception){
             return new BaseResponse<>(((exception.getStatus())));
@@ -74,9 +89,15 @@ public class ChatController {
      */
     //Query String
     @ResponseBody
+    @Transactional(propagation = Propagation.REQUIRED, isolation = READ_COMMITTED, rollbackFor = Exception.class)
     @PostMapping("/send") // (POST) 127.0.0.1:9000/chats/send
     public BaseResponse<String> postKeyword(@RequestBody PostChat postChat) {
         try{
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(postChat.getWriteUserNo() != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             String result = "";
             chatService.postChat(postChat);
             return new BaseResponse<>(result);

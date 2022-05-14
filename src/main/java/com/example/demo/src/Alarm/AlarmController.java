@@ -8,9 +8,14 @@ import com.example.demo.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
+import static com.example.demo.config.BaseResponseStatus.INVALID_USER_JWT;
+import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
 
 @RestController
 @RequestMapping("/alarm")
@@ -40,6 +45,12 @@ public class AlarmController {
     @GetMapping("/keyword/{userNo}") // (GET) 127.0.0.1:9000/alarm/:userNo
     public BaseResponse<List<GetKeyword>> getKeyword(@PathVariable("userNo") int userNo) {
         try{
+            //jwt에서 idx 추출.
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             List<GetKeyword> getKeyword = alarmProvider.getKeyword(userNo);
                 return new BaseResponse<>(getKeyword);
         } catch(BaseException exception){
@@ -54,9 +65,16 @@ public class AlarmController {
      */
     //Query String
     @ResponseBody
+    @Transactional(propagation = Propagation.REQUIRED, isolation = READ_COMMITTED, rollbackFor = Exception.class)
     @PostMapping("/keyword") // (POST) 127.0.0.1:9000/alarm
     public BaseResponse<String> postKeyword(@RequestBody PostKeywordReq postKeywordReq) {
         try{
+            //jwt에서 idx 추출.
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(postKeywordReq.getUserNo() != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             String result = "";
             alarmService.postKeyword(postKeywordReq);
             return new BaseResponse<>(result);

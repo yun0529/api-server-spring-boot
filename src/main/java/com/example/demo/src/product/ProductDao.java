@@ -21,7 +21,7 @@ public class ProductDao {
         this.jdbcTemplate = new JdbcTemplate(dataSource);
     }
 
-    public List<GetProductList> getProducts(){
+    public List<GetProductList> getProducts(int userNo){
         String getProductsQuery = "select " +
                 "Product.productNo," +
                 "User.userNo,User.userNickName," +

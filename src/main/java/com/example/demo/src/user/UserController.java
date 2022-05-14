@@ -8,13 +8,18 @@ import com.example.demo.src.user.model.*;
 import com.example.demo.utils.JwtService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.security.core.parameters.P;
+import org.springframework.transaction.annotation.Propagation;
+
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 
 import static com.example.demo.config.BaseResponseStatus.*;
 import static com.example.demo.utils.ValidationRegex.isRegexUserId;
+import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
 
 @RestController
 @RequestMapping("/users")
@@ -72,6 +77,11 @@ public class UserController {
     public BaseResponse<GetUserRes> getUser(@PathVariable("userNo") int userNo) {
         // Get Users
         try{
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             GetUserRes getUserRes = userProvider.getUser(userNo);
             return new BaseResponse<>(getUserRes);
         } catch(BaseException exception){
@@ -91,6 +101,11 @@ public class UserController {
     public BaseResponse<List<GetBadge>> getBadge(@PathVariable("userNo") int userNo) {
         // Get Users
         try{
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             List<GetBadge> getBadge = userProvider.getBadge(userNo);
             return new BaseResponse<>(getBadge);
         } catch(BaseException exception){
@@ -107,13 +122,14 @@ public class UserController {
      */
     // Body
     @ResponseBody
+    @Transactional(propagation = Propagation.REQUIRED, isolation = READ_COMMITTED , rollbackFor = Exception.class)
     @PostMapping("")
     public BaseResponse<PostUserRes> createUser(@RequestBody PostUserReq postUserReq) {
         // TODO: email 관련한 짧은 validation 예시입니다. 그 외 더 부가적으로 추가해주세요!
         if(postUserReq.getUserId() == null){
             return new BaseResponse<>(POST_USERS_EMPTY_NUMBER);
         }
-        //이메일 정규표현
+        //전화번호 형식
         if(!isRegexUserId(postUserReq.getUserId())){
             return new BaseResponse<>(POST_USERS_INVALID_NUMBER);
         }
@@ -128,12 +144,14 @@ public class UserController {
             return new BaseResponse<>((exception.getStatus()));
         }
     }
+
     /**
-     * 로그인 인증 API
+     * 인증번호 발급 API
      * [Post] /users/certification
      * @return BaseResponse<PostCertificationUserRes>
      */
     @ResponseBody
+    @Transactional(propagation = Propagation.REQUIRED, isolation = READ_COMMITTED , rollbackFor = Exception.class)
     @PatchMapping("/certification")
     public BaseResponse<PostCertificationUserRes> postCertificationUser(@RequestBody PostCertificationUserReq postCertificationUserReq){
         try{
@@ -151,9 +169,10 @@ public class UserController {
      */
     @ResponseBody
     @PostMapping("/logIn")
+    @Transactional(propagation = Propagation.REQUIRED, isolation = READ_COMMITTED, rollbackFor = Exception.class)
     public BaseResponse<PostLoginRes> logIn(@RequestBody PostLoginReq postLoginReq){
         try{
-            // TODO: 로그인 값들에 대한 형식적인 validatin 처리해주셔야합니다!
+            // TODO: 로그인 값들에 대한 형식적인 validation 처리해주셔야합니다!
             // TODO: 유저의 status ex) 비활성화된 유저, 탈퇴한 유저 등을 관리해주고 있다면 해당 부분에 대한 validation 처리도 해주셔야합니다.
             PostLoginRes postLoginRes = userProvider.logIn(postLoginReq);
             return new BaseResponse<>(postLoginRes);
@@ -168,6 +187,7 @@ public class UserController {
      * @return BaseResponse<String>
      */
     @ResponseBody
+    @Transactional(propagation = Propagation.REQUIRED, isolation = READ_COMMITTED, rollbackFor = Exception.class)
     @PatchMapping("/{userNo}")
     public BaseResponse<String> modifyUserName(@PathVariable("userNo") int userNo, @RequestBody User user){
         try {
@@ -201,6 +221,11 @@ public class UserController {
     public BaseResponse<List<GetInterestCategory>> getInterestCategory(@PathVariable("userNo") int userNo) {
         // Get Users
         try{
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             List<GetInterestCategory> getInterestCategory = userProvider.getInterestCategory(userNo);
             return new BaseResponse<>(getInterestCategory);
         } catch(BaseException exception){
@@ -214,6 +239,7 @@ public class UserController {
      * @return BaseResponse<String>
      */
     @ResponseBody
+    @Transactional(propagation = Propagation.REQUIRED, isolation = READ_COMMITTED, rollbackFor = Exception.class)
     @PatchMapping("/interestCategory/{userNo}")
     public BaseResponse<String> modifyInterestCategory(@PathVariable("userNo") int userNo, @RequestBody InterestCategory interestCategory){
         try {
@@ -223,16 +249,45 @@ public class UserController {
             if(userNo != userIdxByJwt){
                 return new BaseResponse<>(INVALID_USER_JWT);
             }
-            //같다면 유저네임 변경
-            PatchInterestCategoryReq patchInterestCategoryReq = new PatchInterestCategoryReq(userNo,interestCategory.getInterestCategoryNo(), interestCategory.getIsCheck());
-            userService.modifyInterestCategory(patchInterestCategoryReq);
+            if(interestCategory.getIsCheck().equals("Y")){
+                PatchInterestCategoryReq patchInterestCategoryReq = new PatchInterestCategoryReq(userNo,interestCategory.getInterestCategoryNo(), interestCategory.getIsCheck());
+                userService.modifyInterestCategory(patchInterestCategoryReq);
 
-            String result = "";
-            return new BaseResponse<>(result);
+                String result = "";
+                return new BaseResponse<>(result);
+            }
+            else if(interestCategory.getIsCheck().equals("N")){
+                PatchInterestCategoryReq patchInterestCategoryReq = new PatchInterestCategoryReq(userNo,interestCategory.getInterestCategoryNo(), interestCategory.getIsCheck());
+                userService.modifyInterestCategory(patchInterestCategoryReq);
+
+                String result = "";
+                return new BaseResponse<>(result);
+            }
+            else{
+                return new BaseResponse<>(POST_INVALID_USERS_INTEREST_CATEGORY_INPUT);
+            }
         } catch (BaseException exception) {
             System.out.println(exception);
             return new BaseResponse<>((exception.getStatus()));
         }
     }
 
+    /**
+     * 자동 로그인 API
+     * [GET] /users/auto-login
+     * @return BaseResponse<GetInterestCategory>
+     */
+    @ResponseBody
+    @GetMapping("/auto-login") // (GET) 127.0.0.1:9000/users/interestCategory/:userNo
+    public BaseResponse<PostLoginRes> getAutoLogin() {
+        // Get Users
+        try{
+            int userIdxByJwt = jwtService.getUserIdx();
+            userProvider.getAutoLogin(userIdxByJwt);
+            PostLoginRes getAutoLogin = new PostLoginRes(userIdxByJwt, jwtService.getJwt());
+            return new BaseResponse<>(getAutoLogin);
+        } catch(BaseException exception){
+            return new BaseResponse<>((exception.getStatus()));
+        }
+    }
 }

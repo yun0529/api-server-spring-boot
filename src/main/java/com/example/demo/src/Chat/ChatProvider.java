@@ -5,6 +5,8 @@ import com.example.demo.config.BaseException;
 import com.example.demo.src.Alarm.model.GetKeyword;
 import com.example.demo.src.Chat.model.GetChatContent;
 import com.example.demo.src.Chat.model.GetChatRoom;
+import com.example.demo.src.user.UserDao;
+import com.example.demo.src.user.model.User;
 import com.example.demo.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 import static com.example.demo.config.BaseResponseStatus.DATABASE_ERROR;
+import static com.example.demo.config.BaseResponseStatus.DO_LOGIN;
 
 //Provider : Read의 비즈니스 로직 처리
 @Service
@@ -21,16 +24,22 @@ public class ChatProvider {
 
     private final ChatDao chatDao;
     private final JwtService jwtService;
+    private final UserDao userDao;
 
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    public ChatProvider(ChatDao chatDao, JwtService jwtService) {
+    public ChatProvider(ChatDao chatDao, JwtService jwtService, UserDao userDao) {
         this.chatDao = chatDao;
         this.jwtService = jwtService;
+        this.userDao = userDao;
     }
 
     public List<GetKeyword> getKeyword(int userNo) throws BaseException{
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try{
             List<GetKeyword> getKeyword = chatDao.getKeyword(userNo);
             return getKeyword;
@@ -42,6 +51,10 @@ public class ChatProvider {
     }
 
     public List<GetChatRoom> getChatRoom(int userNo) throws BaseException{
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try{
             List<GetChatRoom> getChatRoom = chatDao.getChatRoom(userNo);
             return getChatRoom;
@@ -52,7 +65,11 @@ public class ChatProvider {
         }
     }
 
-    public List<GetChatContent> getChatContent(int roomNo) throws BaseException{
+    public List<GetChatContent> getChatContent(int roomNo, int userNo) throws BaseException{
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try{
             List<GetChatContent> getChatContent = chatDao.getChatContent(roomNo);
             return getChatContent;

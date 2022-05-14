@@ -3,6 +3,7 @@ package com.example.demo.src.product;
 
 import com.example.demo.config.BaseException;
 import com.example.demo.src.product.model.*;
+import com.example.demo.src.user.UserDao;
 import com.example.demo.src.user.model.*;
 import com.example.demo.utils.JwtService;
 import com.example.demo.utils.SHA256;
@@ -22,17 +23,24 @@ public class ProductProvider {
     private final ProductDao productDao;
     private final JwtService jwtService;
 
+    private final UserDao userDao;
+
     final Logger logger = LoggerFactory.getLogger(this.getClass());
 
     @Autowired
-    public ProductProvider(ProductDao productDao, JwtService jwtService) {
+    public ProductProvider(ProductDao productDao, JwtService jwtService, UserDao userDao) {
         this.productDao = productDao;
         this.jwtService = jwtService;
+        this.userDao = userDao;
     }
 
-    public List<GetProductList> getProducts() throws BaseException{
+    public List<GetProductList> getProducts(int userNo) throws BaseException{
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try{
-            List<GetProductList> getProductList = productDao.getProducts();
+            List<GetProductList> getProductList = productDao.getProducts(userNo);
             return getProductList;
         }
         catch (Exception exception) {
@@ -40,18 +48,12 @@ public class ProductProvider {
         }
     }
 
-  /*  public List<GetProductList> getProductsByProductNo(int productNo) throws BaseException{
-        try{
-            List<GetProductList> getProductList = productDao.getProductNosByProductNo(productNo);
-            return getProductList;
-        }
-        catch (Exception exception) {
-            throw new BaseException(DATABASE_ERROR);
-        }
-    }*/
 
-
-    public GetProductDetail getProductDetail(int productNo) throws BaseException {
+    public GetProductDetail getProductDetail(int productNo, int userNo) throws BaseException {
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try {
             GetProductDetail getProductDetail = productDao.getProductDetail(productNo);
             return getProductDetail;
@@ -62,6 +64,10 @@ public class ProductProvider {
     }
 
     public int checkInterestProduct(int userNo, int productNo) throws BaseException{
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try{
             return productDao.checkProductInterest(userNo, productNo);
         } catch (Exception exception){
@@ -71,6 +77,10 @@ public class ProductProvider {
     }
 
     public List<GetInterestProduct> getInterestProduct(int userNo) throws BaseException {
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try {
             List<GetInterestProduct> getInterestProduct = productDao.getInterestProduct(userNo);
             return getInterestProduct;
@@ -81,6 +91,10 @@ public class ProductProvider {
     }
 
     public List<GetSellProduct> getSellProduct(int userNo) throws BaseException {
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try {
             List<GetSellProduct> getSellProduct = productDao.getSellProduct(userNo);
             return getSellProduct;
@@ -90,6 +104,10 @@ public class ProductProvider {
         }
     }
     public List<GetSoldOutProduct> getSoldOutProduct(int userNo) throws BaseException {
+        User user = userDao.getNo(userNo);
+        if(user.getStatus().equals("Inactive")){
+            throw new BaseException(DO_LOGIN);
+        }
         try {
             List<GetSoldOutProduct> getSoldOutProduct = productDao.getSoldOutProduct(userNo);
             return getSoldOutProduct;

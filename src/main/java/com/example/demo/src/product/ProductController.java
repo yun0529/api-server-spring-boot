@@ -8,12 +8,15 @@ import com.example.demo.utils.JwtService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 import static com.example.demo.config.BaseResponseStatus.*;
 import static com.example.demo.utils.ValidationRegex.isRegexUserId;
+import static org.springframework.transaction.annotation.Isolation.READ_COMMITTED;
 
 @RestController
 @RequestMapping("/products")
@@ -40,16 +43,16 @@ public class ProductController {
      */
    //Query String
     @ResponseBody
-    @GetMapping("") // (GET) 127.0.0.1:9000/products
-    public BaseResponse<List<GetProductList>> getProducts() {
+    @GetMapping("{userNo}") // (GET) 127.0.0.1:9000/products
+    public BaseResponse<List<GetProductList>> getProducts(@PathVariable("userNo") int userNo) {
         try{
-            //if(productNo == 0){
-                List<GetProductList> getProductList = productProvider.getProducts();
-                return new BaseResponse<>(getProductList);
-            //}
-            // Get Users
-            //List<GetProductList> getProductList = productProvider.getProductsByProductNo(productNo);
-            //return new BaseResponse<>(getProductList);
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
+            List<GetProductList> getProductList = productProvider.getProducts(userNo);
+            return new BaseResponse<>(getProductList);
         } catch(BaseException exception){
             return new BaseResponse<>(((exception.getStatus())));
         }
@@ -62,11 +65,16 @@ public class ProductController {
      */
     // Path-variable
     @ResponseBody
-    @GetMapping("/{productNo}") // (GET) 127.0.0.1:9000/products/:productNo
-    public BaseResponse<GetProductDetail> getProductDetail(@PathVariable("productNo") int productNo) {
+    @GetMapping("/{productNo}/{userNo}") // (GET) 127.0.0.1:9000/products/:productNo
+    public BaseResponse<GetProductDetail> getProductDetail(@PathVariable("productNo") int productNo, @PathVariable("userNo") int userNo) {
         // Get Users
         try{
-            GetProductDetail getProductDetail = productProvider.getProductDetail(productNo);
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
+            GetProductDetail getProductDetail = productProvider.getProductDetail(productNo, userNo);
             return new BaseResponse<>(getProductDetail);
         } catch(BaseException exception){
             return new BaseResponse<>((exception.getStatus()));
@@ -85,6 +93,11 @@ public class ProductController {
     public BaseResponse<List<GetInterestProduct>> getInterestProduct(@PathVariable("userNo") int userNo) {
         // Get Users
         try{
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             List<GetInterestProduct> getInterestProduct = productProvider.getInterestProduct(userNo);
             return new BaseResponse<>(getInterestProduct);
         } catch(BaseException exception){
@@ -98,6 +111,7 @@ public class ProductController {
      * @return BaseResponse<String>
      */
     @ResponseBody
+    @Transactional(propagation = Propagation.REQUIRED, isolation = READ_COMMITTED, rollbackFor = Exception.class)
     @PostMapping("/registInterest")
     public BaseResponse<String> registInterest(@RequestBody PostInterestReq postInterestReq) {
         try {
@@ -107,8 +121,12 @@ public class ProductController {
             if(postInterestReq.getUserNo() != userIdxByJwt){
                 return new BaseResponse<>(INVALID_USER_JWT);
             }
-            //관심 정보가 존재하면 patch하고 아니면 post하게 설정해야될듯
-            productService.registInterest(postInterestReq);
+            if(postInterestReq.getProductInterest().equals("Y") || postInterestReq.getProductInterest().equals("N")){
+                //관심 정보가 존재하면 patch하고 아니면 post하게 설정해야될듯
+                productService.registInterest(postInterestReq);
+            }else {
+                return new BaseResponse<>(POST_INVALID_PRODUCT_INTEREST_INPUT);
+            }
             //PostUserRes postUserRes = userService.createUser(postUserReq);
             String result = "";
             return new BaseResponse<>(result);
@@ -123,6 +141,8 @@ public class ProductController {
      * @return BaseResponse<String>
      */
     @ResponseBody
+
+    @Transactional(propagation = Propagation.REQUIRED, isolation = READ_COMMITTED, rollbackFor = Exception.class)
     @PostMapping("{userNo}") // (POST) 127.0.0.1:9000/products
     public BaseResponse<String> postProduct(@PathVariable("userNo") int userNo, @RequestBody PostProduct postProduct) {
         try {
@@ -158,6 +178,12 @@ public class ProductController {
     @GetMapping("/sell/{userNo}") // (GET) 127.0.0.1:9000/products/sell/:userNo
     public BaseResponse<List<GetSellProduct>> getSellProduct(@PathVariable("userNo") int userNo) {
         try{
+            //jwt에서 idx 추출.
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             List<GetSellProduct> getSellProduct = productProvider.getSellProduct(userNo);
             return new BaseResponse<>(getSellProduct);
         } catch(BaseException exception){
@@ -175,6 +201,12 @@ public class ProductController {
     @GetMapping("/soldOut/{userNo}") // (GET) 127.0.0.1:9000/products/soldOut/:userNo
     public BaseResponse<List<GetSoldOutProduct>> getSoldOutProduct(@PathVariable("userNo") int userNo) {
         try{
+            //jwt에서 idx 추출.
+            int userIdxByJwt = jwtService.getUserIdx();
+            //userIdx와 접근한 유저가 같은지 확인
+            if(userNo != userIdxByJwt){
+                return new BaseResponse<>(INVALID_USER_JWT);
+            }
             List<GetSoldOutProduct> getSoldOutProduct = productProvider.getSoldOutProduct(userNo);
             return new BaseResponse<>(getSoldOutProduct);
         } catch(BaseException exception){
@@ -189,6 +221,7 @@ public class ProductController {
      * @return BaseResponse<String>
      */
     @ResponseBody
+    @Transactional(propagation = Propagation.REQUIRED, isolation = READ_COMMITTED, rollbackFor = Exception.class)
     @PatchMapping("/productStatus/{userNo}") // 127.0.0.1:9000/products/productStatus/:userNo
     public BaseResponse<String> patchProductStatus(@PathVariable int userNo, @RequestBody PatchProductStatus patchProductStatus) {
         try {
@@ -198,10 +231,14 @@ public class ProductController {
             if(userNo != userIdxByJwt){
                 return new BaseResponse<>(INVALID_USER_JWT);
             }
-
-            productService.patchProductStatus(userNo,patchProductStatus);
-            String result = "";
-            return new BaseResponse<>(result);
+            if(patchProductStatus.getProductStatus().equals("sell") || patchProductStatus.getProductStatus().equals("share") || patchProductStatus.getProductStatus().equals("sold_out") ||
+                    patchProductStatus.getProductStatus().equals("share_sold_out") || patchProductStatus.getProductStatus().equals("reserve") || patchProductStatus.getProductStatus().equals("share_reserve")){
+                productService.patchProductStatus(userNo,patchProductStatus);
+                String result = "";
+                return new BaseResponse<>(result);
+            }else {
+                return new BaseResponse<>(PATCH_INVALID_USERS_SALE_STATUS_INPUT);
+            }
         } catch (BaseException exception) {
             return new BaseResponse<>((exception.getStatus()));
         }

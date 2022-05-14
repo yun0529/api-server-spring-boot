@@ -36,16 +36,6 @@ public class ChatDao {
                 getKeywordParam);
     }
 
-    public int postKeyword(PostKeywordReq postKeywordReq){
-        String createUserQuery = "insert into UserInterestKeyword (userNo, keyword) VALUES (?,?)";
-
-        Object[] createUserParams = new Object[]{postKeywordReq.getUserNo(), postKeywordReq.getKeyword()};
-        this.jdbcTemplate.update(createUserQuery, createUserParams);
-
-        String lastInsertIdQuery = "select last_insert_id()";
-        return this.jdbcTemplate.queryForObject(lastInsertIdQuery,int.class);
-    }
-
     public List<GetChatRoom> getChatRoom(int userNo){
         String getChatRoomQuery = "select " +
                 "Room.roomNo,userImageUrl,userNickname as roomTitle, chatContext, " +
@@ -91,6 +81,7 @@ public class ChatDao {
                         rs.getInt("writeUserNo"),
                         rs.getInt("receiveUserNo"),
                         rs.getString("writeUserNickname"),
+                        rs.getString("chatContext"),
                         rs.getString("chatDate"),
                         rs.getString("chatTime")),
                 getChatContentParams);

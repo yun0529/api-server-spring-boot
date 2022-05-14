@@ -12,6 +12,7 @@ public class GetChatContent {
     private int writeUserNo;
     private int receiveUserNo;
     private String writeUserNickname;
+    private String chatContext;
     private String chatDate;
     private String chatTime;
 }
