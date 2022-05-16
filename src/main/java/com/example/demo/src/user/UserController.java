@@ -290,4 +290,21 @@ public class UserController {
             return new BaseResponse<>((exception.getStatus()));
         }
     }
+
+    /**
+     * 카카오 소셜 로그인 API
+     * [GET] /users/login/kakao
+     *
+     */
+    @ResponseBody
+    @GetMapping("/login/kakao") // (GET) 127.0.0.1:9000/users/login/kakao
+    public BaseResponse<String> kakaoCallback(@RequestParam String code) throws BaseException {
+        String access_Token = userService.getKaKaoAccessToken(code);
+        userService.createKakaoUser(access_Token);
+        System.out.println("token : " + code);
+        String result = code;
+        return new BaseResponse<>(result);
+    }
+
+
 }
