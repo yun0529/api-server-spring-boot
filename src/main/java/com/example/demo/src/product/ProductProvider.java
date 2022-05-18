@@ -55,7 +55,8 @@ public class ProductProvider {
             throw new BaseException(DO_LOGIN);
         }
         try {
-            GetProductDetail getProductDetail = productDao.getProductDetail(productNo);
+            GetProductUser getProductUser = productDao.getUserNo(productNo);
+            GetProductDetail getProductDetail = productDao.getProductDetail(productNo,getProductUser.getUserNo());
             return getProductDetail;
         } catch (Exception exception) {
             System.out.println(exception);

@@ -59,8 +59,13 @@ public enum BaseResponseStatus {
 
     FAILED_TO_LOGIN_STATUS(false,3015,"이미 로그인된 아이디입니다."),
 
-    DO_LOGIN(false,3016,"로그아웃된 상태입니다."),
+    DO_LOGIN(false,3016,"당근마켓 계정이 로그아웃된 상태입니다."),
 
+    DO_KAKAO_LOGIN(false,3017,"카카오 계정이 로그아웃된 상태입니다."),
+
+    ALREADY_LOGIN(false,3018,"당근마켓 계정이 이미 로그인된 상태입니다."),
+
+    ALREADY_KAKAO_LOGIN(false,3019,"카카오 계정이 이미 로그인된 상태입니다."),
     /**
      * 4000 : Database, Server 오류
      */
@@ -76,6 +81,7 @@ public enum BaseResponseStatus {
     //[POST] /products/interest/{productNo}
     MODIFY_FAIL_INTEREST(false,4014,"관심 설정 실패"),
 
+    MODIFY_FAIL_KAKAO_JWT(false,4015,"카카오 JWT 수정 실패"),
     // 5000 : 필요시 만들어서 쓰세요
     //PATCH
     INVALID_USER_NICKNAME_LENGTH(false,5000,"닉네임은 13자리 이상으로 설정할 수 없습니다.");

@@ -296,7 +296,7 @@ public class UserController {
      * [GET] /users/login/kakao
      *
      */
-    @ResponseBody
+/*    @ResponseBody
     @GetMapping("/login/kakao") // (GET) 127.0.0.1:9000/users/login/kakao
     public BaseResponse<String> kakaoCallback(@RequestParam String code) throws BaseException {
         String access_Token = userService.getKaKaoAccessToken(code);
@@ -306,5 +306,5 @@ public class UserController {
         return new BaseResponse<>(result);
     }
 
-
+*/
 }

@@ -2,6 +2,7 @@ package com.example.demo.src.Kakao;
 
 
 import com.example.demo.config.BaseException;
+import com.example.demo.src.Kakao.model.KaKaoTokens;
 import com.example.demo.src.Kakao.model.PostCreateKakaoAccountRes;
 import com.example.demo.src.Kakao.model.PostCreateKakaoRes;
 import com.example.demo.utils.JwtService;
@@ -13,11 +14,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.io.*;
+import java.math.BigInteger;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import static com.example.demo.config.BaseResponseStatus.MODIFY_FAIL_USERNAME;
-import static com.example.demo.config.BaseResponseStatus.POST_USERS_EXISTS_NUMBER;
+import static com.example.demo.config.BaseResponseStatus.*;
 
 
 // Service Create, Update, Delete 의 로직 처리
@@ -33,11 +34,11 @@ public class KakaoService {
         this.jwtService = jwtService;
         this.kakaoDao = kakaoDao;
     }
-    public String getKaKaoAccessToken(String code){
+    public KaKaoTokens getKaKaoAccessToken(String code){
         String access_Token="";
         String refresh_Token ="";
         String reqURL = "https://kauth.kakao.com/oauth/token";
-
+        KaKaoTokens kaKaoTokens = null;
         try{
             URL url = new URL(reqURL);
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -78,17 +79,17 @@ public class KakaoService {
 
             System.out.println("access_token : " + access_Token);
             System.out.println("refresh_token : " + refresh_Token);
-
+            kaKaoTokens = new KaKaoTokens(access_Token,refresh_Token);
             br.close();
             bw.close();
         }catch (IOException e) {
             e.printStackTrace();
         }
 
-        return access_Token;
+        return kaKaoTokens;
     }
 
-    public PostCreateKakaoAccountRes createKakaoUser(String token) throws BaseException {
+    public PostCreateKakaoAccountRes createKakaoUser(String accessToken, String refreshToken) throws BaseException {
 
         String reqURL = "https://kapi.kakao.com/v2/user/me";
         PostCreateKakaoAccountRes postCreateKakaoAccountRes = null;
@@ -101,7 +102,7 @@ public class KakaoService {
 
             conn.setRequestMethod("POST");
             conn.setDoOutput(true);
-            conn.setRequestProperty("Authorization", "Bearer " + token); //전송할 header 작성, access_token전송
+            conn.setRequestProperty("Authorization", "Bearer " + accessToken); //전송할 header 작성, access_token전송
 
             //결과 코드가 200이라면 성공
             int responseCode = conn.getResponseCode();
@@ -139,15 +140,19 @@ public class KakaoService {
                     element.getAsJsonObject().get("kakao_account").getAsJsonObject().get("email").getAsString(),"Active");
             postCreateKakaoRes = new PostCreateKakaoRes(
                     element.getAsJsonObject().get("id").getAsBigInteger(),
-                    token
+                    accessToken, refreshToken
             );
             br.close();
 
         } catch (IOException e) {
             System.out.println(e);
         }
-        if(kakaoDao.checKakaoId(postCreateKakaoAccountRes.getKakaoId()) ==1){
-            int result = kakaoDao.modifyKakaoAccessToken(postCreateKakaoAccountRes.getKakaoId(),token);
+        if(kakaoDao.checkKakaoId(postCreateKakaoAccountRes.getKakaoId()) ==1){
+            int statusResult = kakaoDao.modifyKakaoAccountActive(postCreateKakaoAccountRes.getKakaoId());
+            if(statusResult == 0){
+                throw new BaseException(MODIFY_FAIL_USERNAME);
+            }
+            int result = kakaoDao.modifyKakaoAccessToken(postCreateKakaoAccountRes.getKakaoId(),accessToken);
             if(result == 0){
                 throw new BaseException(MODIFY_FAIL_USERNAME);
             }
@@ -156,7 +161,51 @@ public class KakaoService {
             kakaoDao.createKakaoToken(postCreateKakaoRes);
         }
 
-
         return postCreateKakaoAccountRes;
+    }
+
+    public void patchKaKaoAccountInactive(BigInteger kakaoId, String accessToken) throws BaseException {
+        PostCreateKakaoAccountRes postCreateKakaoAccountRes = kakaoDao.getId(kakaoId);
+        if(postCreateKakaoAccountRes.getStatus().equals("Inactive")){
+            throw new BaseException(DO_KAKAO_LOGIN);
+        }
+        String reqURL = "https://kapi.kakao.com/v1/user/logout";
+        try{
+            URL url = new URL(reqURL);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+
+            //POST 요청을 위해 기본값이 false인 setDoOutput을 true로
+            conn.setRequestMethod("POST");
+            conn.setDoOutput(true);
+            conn.setRequestProperty("Authorization", "Bearer " + accessToken); //전송할 header 작성, access_token전송
+
+            //결과 코드가 200이라면 성공
+            int responseCode = conn.getResponseCode();
+            System.out.println("responseCode : " + responseCode);
+            //요청을 통해 얻은 JSON타입의 Response 메세지 읽어오기
+            BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()));
+            String line = "";
+            String result = "";
+
+            while ((line = br.readLine()) != null) {
+                result += line;
+            }
+            System.out.println("response body : " + result);
+
+            //Gson 라이브러리로 JSON파싱
+            JsonParser parser = new JsonParser();
+            JsonElement element = parser.parse(result);
+
+            br.close();
+        }catch (IOException e) {
+            System.out.println(e);
+        }
+
+        try {
+            kakaoDao.modifyKakaoLogOut(kakaoId);
+        }catch(Exception e){
+            System.out.println(e);
+            throw new BaseException(DATABASE_ERROR);
+        }
     }
 }

@@ -4,6 +4,8 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @AllArgsConstructor
@@ -25,4 +27,5 @@ public class GetProductDetail {
     private String productStatus;
     private String productPrice;
     private String productPriceStatus;
+    private List<GetProductList> getProductList;
 }

@@ -10,6 +10,7 @@ import java.math.BigInteger;
 @Setter
 @AllArgsConstructor
 public class PostCreateKakaoRes {
-    private BigInteger id;
+    private BigInteger kakaoId;
     private String accessToken;
+    private String refreshToken;
 }
